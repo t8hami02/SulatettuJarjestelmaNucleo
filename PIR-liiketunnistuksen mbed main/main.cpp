@@ -1,64 +1,89 @@
 #include "mbed.h"
-#include "L3G4200D.h"
+
+AnalogIn ain(A0);
+AnalogIn ain2(A1);
 
 Timer timer;
-Timer timer2;
 Serial pc(USBTX,USBRX);
-L3G4200D gyro(D14, D15);
-int g[3]={0, 0, 0};
-int g2[3] ={0, 0, 0};
-int ka1 = 0, ka2 = 0, ka3 = 0;
-float kulma[3] = {0.0, 0.0, 0.0};
-long aika2 = 0;
+
 long aika = 0;
+
+float lux;
+float pirArvo;
+
+
+float luxGet()
+{
+	float mittaus;
+	float ress;
+	float janniteR;
+	float tulos;
+	
+		mittaus = ain.read();
+		
+		//lasketaan anturin resistanssi
+		janniteR = mittaus * 3.3;
+		ress = 3.3/janniteR *11910 - 11910;
+		
+		//muutetaan anturin resistanssi lux-arvoksi kalibrointi kaavalla
+		tulos = 3 * pow(10.0, 7.0) * pow(ress, -1.641);
+		
+		return tulos;
+}
+
+bool liikkeenTunnistus()
+{
+	float pir;
+	
+	pir = ain2.read();
+	
+	if(pir > 0.5)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 int main() 
 {
 
 timer.start();
 timer.reset();
-timer2.start();
-timer2.reset();
 	while(true)
 	{
 		
-		/*
-		while ( aika < 40 )
+		if (liikkeenTunnistus() == true)
 		{
-			aika = timer.read_ms();
 			
-		}*/
-		//aika2 = timer2.read_ms();
-		//timer.reset();
+			lux = luxGet();
+			if(lux < 50)
+			{
+				
+				//pc.printf("Ota kuva pimealla");
+				//pc.printf("\r\n");
+			}
+			else
+			{
+				//pc.printf("Ota kuva valoisalla");
+				//pc.printf("\r\n");
+			}
+			
+			pc.printf("1");
+			pc.printf("\r\n");
+			
+			ThisThread::sleep_for(5000);
+			//wait_ms(3000);
+		}
 		
-		gyro.read(g);
-		//Vakiotason korjaukset, testaa ja muuta nollat tarpeen mukaan...
-		
-		g[0] = g[0];
-		g[1] = g[1] + 15;
-		g[2] = g[2];
-		
-		kulma[0] = kulma[0]+g2[0]*70*0.001*(aika)*0.001;
-		kulma[1] = kulma[1]+g2[1]*70*0.001*(aika)*0.001;
-		kulma[2] = kulma[2]+g2[2]*70*0.001*(aika)*0.001;
-		
-		g2[0] = g[0];
-		g2[1] = g[1];
-		g2[2] = g[2];
-		
-		//Aikaleiman tulostus (ms)
-        pc.printf("%i ", aika);
-		
-		//Gyrodatan tulostus (raakadataa; datasheetistä kalibrointi)
-		/*for(int i=0; i<3; i++)
-		{
-                        pc.printf("%f ",kulma[i]);
-						//pc.printf("%i ",g[i]);
-		}*/
-		
-		pc.printf("\r\n");
-		//wait(0.02);  //Ei tarvi odottaa jos pikavauhtia etsitään
-		
+		//lux = luxGet();
+		//pirArvo = ain2.read();
+		//pc.printf("%f", pirArvo);
+		//pc.printf("\r\n");
 		
 	}
 }	
+
+
