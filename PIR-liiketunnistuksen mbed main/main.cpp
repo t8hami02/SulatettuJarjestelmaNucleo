@@ -11,6 +11,8 @@ long aika = 0;
 float lux;
 float pirArvo;
 
+int apu = 0;
+
 
 float luxGet()
 {
@@ -34,12 +36,35 @@ float luxGet()
 bool liikkeenTunnistus()
 {
 	float pir;
+	bool vipu = true;
+	float aika2;
+	Timer timer2;
 	
 	pir = ain2.read();
 	
 	if(pir > 0.5)
 	{
-		return true;
+		timer2.start();
+		aika2 = timer2.read_ms();
+		while (aika2 < 1000 && vipu == true)
+			{
+				aika2 = timer2.read_ms();
+				pir = ain2.read();				
+				
+				if( pir < 0.5)
+				{
+					vipu = false;
+					timer2.reset();
+					timer2.stop();
+					return false;
+				}
+			}
+			if ( aika2 > 1000)
+			{
+				timer2.reset();
+				timer2.stop();
+				return true;
+			}		
 	}
 	else
 	{
@@ -71,11 +96,11 @@ timer.reset();
 				//pc.printf("\r\n");
 			}
 			
+			
 			pc.printf("1");
-			pc.printf("\r\n");
+			//pc.printf("\r\n");
 			
 			ThisThread::sleep_for(5000);
-			//wait_ms(3000);
 		}
 		
 		//lux = luxGet();
