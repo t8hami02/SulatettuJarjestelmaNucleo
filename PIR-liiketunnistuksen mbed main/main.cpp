@@ -2,17 +2,16 @@
 
 AnalogIn ain(A0);
 AnalogIn ain2(A1);
+AnalogOut aout(A2);
 
 Timer timer;
 Serial pc(USBTX,USBRX);
+//DigitalIn button (PC_13);
 
-long aika = 0;
 
 float lux;
 float pirArvo;
-
-int apu = 0;
-
+float ainArvo;
 
 float luxGet()
 {
@@ -38,6 +37,7 @@ bool liikkeenTunnistus()
 	float pir;
 	bool vipu = true;
 	float aika2;
+	float raja = 1500.0;
 	Timer timer2;
 	
 	pir = ain2.read();
@@ -46,7 +46,7 @@ bool liikkeenTunnistus()
 	{
 		timer2.start();
 		aika2 = timer2.read_ms();
-		while (aika2 < 1000 && vipu == true)
+		while (aika2 < raja && vipu == true)
 			{
 				aika2 = timer2.read_ms();
 				pir = ain2.read();				
@@ -59,7 +59,7 @@ bool liikkeenTunnistus()
 					return false;
 				}
 			}
-			if ( aika2 > 1000)
+			if ( aika2 > raja)
 			{
 				timer2.reset();
 				timer2.stop();
@@ -72,41 +72,29 @@ bool liikkeenTunnistus()
 	}
 }
 
+
 int main() 
 {
-
-timer.start();
-timer.reset();
+pc.baud(9600);
 	while(true)
 	{
+		lux = luxGet();
 		
-		if (liikkeenTunnistus() == true)
+		if( lux < 50)
 		{
-			
-			lux = luxGet();
-			if(lux < 50)
-			{
-				
-				//pc.printf("Ota kuva pimealla");
-				//pc.printf("\r\n");
-			}
-			else
-			{
-				//pc.printf("Ota kuva valoisalla");
-				//pc.printf("\r\n");
-			}
-			
-			
-			pc.printf("1");
-			//pc.printf("\r\n");
-			
-			ThisThread::sleep_for(5000);
+			aout.write(0.66);
+		}
+		else
+		{
+			aout.write(0.0);
 		}
 		
-		//lux = luxGet();
-		//pirArvo = ain2.read();
-		//pc.printf("%f", pirArvo);
-		//pc.printf("\r\n");
+		if(liikkeenTunnistus() == true)
+		{
+			pc.printf("1");			
+			ThisThread::sleep_for(3000);
+		}
+
 		
 	}
 }	
